@@ -1,0 +1,69 @@
+Scene loaded with 2 meshes
+11/23/2025 8:33:15 PM
+Mesh 0: Cube.005
+  Vertices: 312
+  Faces: 196
+Mesh 1: Cube.005
+  Vertices: 12
+  Faces: 4
+Scene loaded with 2 meshes
+11/25/2025 1:21:48 PM
+Mesh 0: Cube.005
+  Vertices: 312
+  Faces: 196
+Mesh 1: Cube.005
+  Vertices: 12
+  Faces: 4
+Scene loaded with 2 meshes
+11/25/2025 1:36:13 PM
+Mesh 0: Cube.005
+  Vertices: 312
+  Faces: 196
+Mesh 1: Cube.005
+  Vertices: 12
+  Faces: 4
+Scene loaded with 2 meshes
+11/25/2025 1:40:17 PM
+Mesh 0: Cube.005
+  Vertices: 312
+  Faces: 196
+Mesh 1: Cube.005
+  Vertices: 12
+  Faces: 4
+Scene loaded with 2 meshes
+11/25/2025 1:41:45 PM
+Mesh 0: Cube.005
+  Vertices: 312
+  Faces: 196
+Mesh 1: Cube.005
+  Vertices: 12
+  Faces: 4
+Scene loaded with 2 meshes
+11/25/2025 1:49:13 PM
+Mesh 0: Cube.005
+  Vertices: 312
+  Faces: 196
+Mesh 1: Cube.005
+  Vertices: 12
+  Faces: 4
+Scene loaded with 2 meshes
+11/25/2025 1:50:44 PM
+Mesh 0: Cube.005
+  Vertices: 312
+  Faces: 196
+Mesh 1: Cube.005
+  Vertices: 12
+  Faces: 4
+Scene loaded with 2 meshes
+11/25/2025 1:51:07 PM
+Mesh 0: Cube.005
+  Vertices: 312
+  Faces: 196
+Mesh 1: Cube.005
+  Vertices: 12
+  Faces: 4
+Scene loaded with 1 meshes
+11/25/2025 1:52:02 PM
+Mesh 0: Cube.004
+  Vertices: 2359
+  Faces: 948
