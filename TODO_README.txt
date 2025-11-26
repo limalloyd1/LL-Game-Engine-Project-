@@ -4,6 +4,9 @@ ADD FBX interpreter to hold 3D models - using Assimp.NET (C#)
 	- render interpreted data using OpenGL
 
 	Create vertex and fragment shader code
+	Change BG color 
+	Create Camera rotation functionality
+	Scale down object 5 times to fit in window 
 	Update LoadMeshData() to handle normals and UVs properly
 	Update Program.cs to wire everything together
 
@@ -27,4 +30,5 @@ Add player controller - baseline
 
             // Console.WriteLine("Accelerated Speed: ");
             // float speed = playerOne.accelerate(p1Speed);
+
 
