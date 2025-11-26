@@ -12,9 +12,7 @@ ADD FBX interpreter to hold 3D models - using Assimp.NET (C#)
 
 ADD Music interpretation for BGM
 
-
 Go over OpenTK 3D rendering class 
-
 
 Add procedural generation
 
@@ -29,3 +27,4 @@ Add player controller - baseline
 
             // Console.WriteLine("Accelerated Speed: ");
             // float speed = playerOne.accelerate(p1Speed);
+
