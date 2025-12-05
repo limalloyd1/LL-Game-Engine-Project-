@@ -10,6 +10,7 @@ namespace openTKWindowSpace
 {
     public class openGLRenderer : GameWindow
     {
+        // Mesh buffers
         private int _vertexArrayObject;
         private int _vertexBufferObject;
         private int _elementBufferObject;
@@ -18,15 +19,25 @@ namespace openTKWindowSpace
         private int _shaderProgram;
         private int _indiceCount;
 
+        // Terrain buffers
+        private int _terrainVertexArrayObject;
+        private int _terrainVertexBufferObject;
+        private int _terrainElementBufferObject;
+        private int _terrainNormalBufferObject;
+        private int _terrainUvBufferObject;
+        private int _terrainIndiceCount;
 
-        //Camera and transformation
+        // Camera and transformation
         private Matrix4 _viewMatrix;
         private Matrix4 _projectionMatrix;
-        private float _cameraDistance = 35f; // how far cam is from mesh
+        private float _cameraDistance = 75f; // how far cam is from mesh
         private float _cameraHeight = 0f; // how high cam is 
+        private float _cameraRotation = 0f; // NEW: Camera Rotation Constructor
         private float _meshRotationX = 0f;
         private float _meshRotationY = 0f;
         private float _meshRotationZ = 0f;
+        private float _meshScale = 1.0f;
+        private Vector3 _meshColor = new Vector3(0.8f, 0.9f, 0.7f);
 
         // Shader source code
         public static readonly string VertexShaderSource = @"
@@ -56,6 +67,8 @@ namespace openTKWindowSpace
 
             out vec4 FragColor;
 
+            uniform vec3 meshColor;
+
             void main(void)
             {
                 // Simple lighting based on normals
@@ -70,7 +83,7 @@ namespace openTKWindowSpace
             : base(GameWindowSettings.Default, 
                 new NativeWindowSettings()
                 {
-                    Size = (width, height),
+                    ClientSize = (width, height),
                     Title = title
                 })
         {
@@ -81,15 +94,15 @@ namespace openTKWindowSpace
         {
             base.OnLoad();
 
-            // Sets bg color
-            GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+            // Sets bg color - dark cyan
+            GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
             // Enable depth testing for 3D rendering
             GL.Enable(EnableCap.DepthTest);
 
             // Set up Camera matrices
             _viewMatrix = Matrix4.LookAt(
-                new Vector3(0,5,10), // Camera Position
+                new Vector3(5,0,0), // Camera Position
                 new Vector3(0,0,0), // Look at point (center of mesh)
                 new Vector3(0,1,0) // Up
             );
@@ -169,6 +182,64 @@ namespace openTKWindowSpace
             }
         }
 
+        /// Load terrain data into GPU buffers
+        public void LoadTerrainData(float[] vertices, uint[] indices, float[] normals, float[] uvs)
+        {
+            try
+            {
+                _terrainIndiceCount = indices.Length;
+
+                // Create Terrain Vertex Array Object
+                _terrainVertexArrayObject = GL.GenVertexArray();
+                GL.BindVertexArray(_terrainVertexArrayObject);
+
+                // Create Terrain Vertex Buffer Object
+                _terrainVertexBufferObject = GL.GenBuffer();
+                GL.BindBuffer(BufferTarget.ArrayBuffer, _terrainVertexBufferObject);
+                GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
+
+                // Vertex attribute pointer for position
+                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
+                GL.EnableVertexAttribArray(0);
+
+                // Create Terrain Normal Buffer Object
+                if (normals != null && normals.Length > 0)
+                {
+                    _terrainNormalBufferObject = GL.GenBuffer();
+                    GL.BindBuffer(BufferTarget.ArrayBuffer, _terrainNormalBufferObject);
+                    GL.BufferData(BufferTarget.ArrayBuffer, normals.Length * sizeof(float), normals, BufferUsageHint.StaticDraw);
+
+                    GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
+                    GL.EnableVertexAttribArray(1);
+                }
+
+                // Create Terrain UV Buffer Object
+                if (uvs != null && uvs.Length > 0)
+                {
+                    _terrainUvBufferObject = GL.GenBuffer();
+                    GL.BindBuffer(BufferTarget.ArrayBuffer, _terrainUvBufferObject);
+                    GL.BufferData(BufferTarget.ArrayBuffer, uvs.Length * sizeof(float), uvs, BufferUsageHint.StaticDraw);
+
+                    GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), 0);
+                    GL.EnableVertexAttribArray(2);
+                }
+
+                // Create Terrain Element Buffer Object
+                _terrainElementBufferObject = GL.GenBuffer();
+                GL.BindBuffer(BufferTarget.ElementArrayBuffer, _terrainElementBufferObject);
+                GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
+
+                GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+                GL.BindVertexArray(0);
+
+                Console.WriteLine($"Terrain data loaded: {vertices.Length / 3} vertices, {indices.Length / 3} triangles");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERROR loading terrain data: {ex.Message}");
+            }
+        }
+
         // Compiles Shader programs: CHECK OVER
         public void CompileShaders(string vertexShaderSource, string fragmentShaderSource)
         {
@@ -223,7 +294,7 @@ namespace openTKWindowSpace
             }
         }
 
-        // Called when rendering a frame: CHECK OVER
+        /// Called when rendering a frame
         protected override void OnRenderFrame(FrameEventArgs e)
         {
             base.OnRenderFrame(e);
@@ -236,24 +307,55 @@ namespace openTKWindowSpace
             {
                 GL.UseProgram(_shaderProgram);
 
-                // setup transformation matrices
-                Matrix4 modelMatrix = Matrix4.Identity;
+                // RENDER TERRAIN FIRST
+                if (_terrainVertexArrayObject != 0 && _terrainIndiceCount > 0)
+                {
+                    // Move terrain down and center it
+                    Matrix4 terrainModelMatrix = Matrix4.CreateTranslation(-25f, -2f, -25f);
 
-                // Pass matrices to shader
-                int modelLoc = GL.GetUniformLocation(_shaderProgram, "model");
-                int viewLoc = GL.GetUniformLocation(_shaderProgram, "view");
-                int projLoc = GL.GetUniformLocation(_shaderProgram, "projection");
+                    int modelLoc = GL.GetUniformLocation(_shaderProgram, "model");
+                    int viewLoc = GL.GetUniformLocation(_shaderProgram, "view");
+                    int projLoc = GL.GetUniformLocation(_shaderProgram, "projection");
 
-                GL.UniformMatrix4(modelLoc, false, ref modelMatrix);
-                GL.UniformMatrix4(viewLoc, false, ref _viewMatrix);
-                GL.UniformMatrix4(projLoc, false, ref _projectionMatrix);    
-            }
+                    GL.UniformMatrix4(modelLoc, false, ref terrainModelMatrix);
+                    GL.UniformMatrix4(viewLoc, false, ref _viewMatrix);
+                    GL.UniformMatrix4(projLoc, false, ref _projectionMatrix);
 
-            // Render mesh
-            if (_vertexArrayObject != 0 && _indiceCount > 0)
-            {
-                GL.BindVertexArray(_vertexArrayObject);
-                GL.DrawElements(PrimitiveType.Triangles, _indiceCount, DrawElementsType.UnsignedInt, 0);
+                    // Set terrain to bright color so it's easy to see
+                    int colorLoc = GL.GetUniformLocation(_shaderProgram, "meshColor");
+                    Vector3 terrainColor = new Vector3(0.2f, 0.8f, 1.0f); // Bright cyan
+                    GL.Uniform3(colorLoc, terrainColor);
+
+                    GL.BindVertexArray(_terrainVertexArrayObject);
+                    GL.DrawElements(PrimitiveType.Triangles, _terrainIndiceCount, DrawElementsType.UnsignedInt, 0);
+                }
+
+                // RENDER FBX MESH SECOND
+                if (_vertexArrayObject != 0 && _indiceCount > 0)
+                {
+                    // Set up transformation matrices with rotation and scale
+                    Matrix4 modelMatrix = Matrix4.Identity;
+                    modelMatrix *= Matrix4.CreateScale(_meshScale);
+                    modelMatrix *= Matrix4.CreateRotationX(_meshRotationX);
+                    modelMatrix *= Matrix4.CreateRotationY(_meshRotationY);
+                    modelMatrix *= Matrix4.CreateRotationZ(_meshRotationZ);
+
+                    // Pass matrices to shader
+                    int modelLoc = GL.GetUniformLocation(_shaderProgram, "model");
+                    int viewLoc = GL.GetUniformLocation(_shaderProgram, "view");
+                    int projLoc = GL.GetUniformLocation(_shaderProgram, "projection");
+
+                    GL.UniformMatrix4(modelLoc, false, ref modelMatrix);
+                    GL.UniformMatrix4(viewLoc, false, ref _viewMatrix);
+                    GL.UniformMatrix4(projLoc, false, ref _projectionMatrix);
+
+                    // Pass color to shader
+                    int colorLoc = GL.GetUniformLocation(_shaderProgram, "meshColor");
+                    GL.Uniform3(colorLoc, _meshColor);
+
+                    GL.BindVertexArray(_vertexArrayObject);
+                    GL.DrawElements(PrimitiveType.Triangles, _indiceCount, DrawElementsType.UnsignedInt, 0);
+                }
             }
 
             // Swap buffers
@@ -271,9 +373,13 @@ namespace openTKWindowSpace
                 Close();
             }
 
-            // Update Camera Position 
+
             _viewMatrix = Matrix4.LookAt(
-                new Vector3(0, _cameraHeight, _cameraDistance),
+                new Vector3(
+                    MathF.Sin(_cameraRotation) * _cameraDistance,  // Uses BOTH values
+                    _cameraHeight, 
+                    MathF.Cos(_cameraRotation) * _cameraDistance   // Uses BOTH values
+                ),
                 new Vector3(0, 0, 0),
                 new Vector3(0, 1, 0)
             );
@@ -285,6 +391,13 @@ namespace openTKWindowSpace
 
             // Adjust camera distance with scroll wheel
             _cameraDistance -= e.OffsetY * 0.5f;
+            
+            // Adjsut camera rotation with scroll wheel press 
+            var input = KeyboardState; 
+            if (input.IsKeyDown(OpenTK.Windowing.GraphicsLibraryFramework.Keys.Tab))
+            {
+                _cameraRotation -= e.OffsetX * 0.15f;   
+            }
 
             // Clamp distance to prevent going too close or too far
             _cameraDistance = Math.Clamp(_cameraDistance, 2f, 100f);
@@ -298,6 +411,18 @@ namespace openTKWindowSpace
             _meshRotationX = rotationX;
             _meshRotationY = rotationY;
             _meshRotationZ = rotationZ;
+        }
+
+        public void SetMeshScale(float scale)
+        {
+            _meshScale = scale;
+            Console.WriteLine($"Mesh scale set to: {_meshScale}");
+        }
+
+        public void SetMeshColor(float r, float g, float b)
+        {
+            _meshColor = new Vector3(r,g,b);
+            Console.WriteLine($"Mesh color set to: R={r} G={g} B={b}");
         }
 
         // Resizes window: CHECK OVER
