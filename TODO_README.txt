@@ -1,26 +1,19 @@
 TODO: 
++ Add procedural generation (terrain, objects, etc.)
 
-ADD FBX interpreter to hold 3D models - using Assimp.NET (C#)
-	- render interpreted data using OpenGL
-
-	Create vertex and fragment shader code
-	Change BG color 
-	Create Camera rotation functionality
-	Scale down object 5 times to fit in window 
-	Update LoadMeshData() to handle normals and UVs properly
-	Update Program.cs to wire everything together
-
-- Fix camera to view meshes properly
+- Fix camera to view meshes properly (Progress Made)
 - Adjust shader code for lighting
-
-ADD Music interpretation for BGM
+- Adjust mesh coloring 
 
 Go over OpenTK 3D rendering class 
 
-Add procedural generation
+Adjust SetMeshColor method in openTKWindow class 
+Add wireframe mode 
+Set BG Color to more neutral color
 
-Add player controller - baseline 
++ ADD Music interpretation for BGM
 
++ Add player controller - baseline 
 
             // PlayerClass playerOne = new PlayerClass();
             // float p1Speed = 25.0f;
@@ -31,4 +24,8 @@ Add player controller - baseline
             // Console.WriteLine("Accelerated Speed: ");
             // float speed = playerOne.accelerate(p1Speed);
 
+
+COMPLETED TASKS:
+
+ADDED FBX interpreter to hold 3D models - using Assimp.NET (C#)
 
